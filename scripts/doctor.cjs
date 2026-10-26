@@ -5,7 +5,9 @@ function check(name,ok,fix){console.log((ok?'OK   ':'NEED ')+name+(ok?'':' — '
 function runs(command,args){const r=spawnSync(command,args,{stdio:'ignore'});return !r.error&&r.status===0;}
 check('Node.js 22+',Number(process.versions.node.split('.')[0])>=22,'Install Node.js 22 or newer');
 check('Python 3 + Pillow',runs('python3',['-c','from PIL import Image,ImageDraw,ImageFont']),'Install python3 and python3-pil');
-check('DejaVu Sans font',fs.existsSync('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),'Install fonts-dejavu-core');
+const dejavu_found = fs.existsSync('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf') ||
+fs.existsSync('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf') || fs.existsSync('/usr/share/fonts/TTF/DejaVuSans.ttf');
+check('DejaVu Sans font',dejavu_found,'Install fonts-dejavu-core');
 check('SPIR-V validator',runs(tool('SPIRV_VAL','spirv-val'),['--version']),'Install spirv-tools or set SPIRV_VAL');
 for(const file of ['homebrew-launcher/shaders/launcher.comp.spv','homebrew-launcher/shaders/launcher.frag.spv','apps/hello-world/app.json'])check(file,fs.existsSync(path.join(root,file)),'Use the complete release archive');
 if(process.argv.includes('--build'))check('GLSL compiler',runs(tool('GLSLANG','glslangValidator'),['--version']),'Install glslang-tools or set GLSLANG');
