@@ -11,10 +11,11 @@ launcher's `apps/` folder, or point the launcher at this folder's parent. Run
 this from the GPUBrewLauncher project folder:
 
 ```sh
-HB_APPS_DIR=/home/laura/Downloads/app-test1 ./start.sh 192.168.68.130
+HB_APPS_DIR=/path/to/your/app-library ./start.sh
 ```
 
-Use `192.168.68.133` instead when the computer is on Wi-Fi. Refresh the app menu
+`./start.sh` detects the computer's LAN address. If the computer has both Wi-Fi
+and Ethernet, choose the one on the console's network. Refresh the app menu
 after copying or rebuilding the package.
 
 ## Controls
@@ -56,28 +57,27 @@ after copying or rebuilding the package.
 
 ## Rebuild
 
-The SDK path is found automatically when the folder is inside
-`HBLauncher/apps/`. For this standalone location, point `HB_SDK` at the shared
-SDK and make sure `glslangValidator` and `spirv-val` are on `PATH` (or set
+The SDK path is found automatically when this folder is inside the launcher's
+`apps/` folder. From a standalone location, set `HB_SDK` to the shared SDK and
+make sure `glslangValidator` and `spirv-val` are on `PATH` (or set
 `GLSLANG`/`SPIRV_VAL`). If you change the atlas, icon, state or sounds, run
 `python3 assets.py` first.
 
 ```sh
-HB_SDK=/home/laura/Downloads/HBLauncher-main-Edit2/HBLauncher-main/sdk \
-  node build.cjs
+HB_SDK=/path/to/GPUBrewLauncher/sdk node build.cjs
 ```
 
 Run the checks from the same environment:
 
 ```sh
-HB_LAUNCHER=/home/laura/Downloads/HBLauncher-main-Edit2/HBLauncher-main \
-  node check.cjs
+node check.cjs
 ```
 
-The check builds the launcher's desktop Vulkan helpers if needed. If the Vulkan
-headers are in a nonstandard location, set `HB_VULKAN_INCLUDE` and
-`HB_VULKAN_LINK` (for example, `-l:libvulkan.so.1` when only the runtime
-library is installed).
+The check builds the launcher's desktop Vulkan helpers if needed. If this
+package is outside the launcher's `apps/` folder, set
+`HB_LAUNCHER=/path/to/GPUBrewLauncher`. If the Vulkan headers are in a
+nonstandard location, set `HB_VULKAN_INCLUDE` and `HB_VULKAN_LINK` (for example,
+`-l:libvulkan.so.1` when only the runtime library is installed).
 
 The check renders four previews into `previews/`: `play.png`, `win.png`,
 `gameover.png` and `dying.png`. It exercises the actual SPIR-V compute shader,

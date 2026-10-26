@@ -45,20 +45,23 @@ Building apps also needs glslang-tools; check it with:
 
 Desktop GPU tests need a C compiler, libvulkan-dev and a Vulkan driver.
 
-Find the computer's LAN IPv4 address:
+The host finds the computer's LAN address automatically. To see the candidates
+without starting a session:
 
-  hostname -I
+  ./start.sh --list
 
-This fork's reference setup uses:
+If the computer has both Wi-Fi and Ethernet, ./start.sh lists every candidate
+with its interface name and asks which one shares the console's network. You can
+also pass that address directly to skip the prompt:
 
-  Ethernet: 192.168.68.130
-  Wi-Fi:    192.168.68.133
+  ./start.sh 192.0.2.10
 
-Use the address of the interface that shares a network with the console. Do not
-use 127.0.0.1, a VPN-only address, or the console's own address. If hostname -I
-shows a different address for that interface, use that address instead. The
-console must be able to reach the computer on TCP 39380. Allow that port through
-the local firewall and do not expose it to the public internet.
+Use the address of the interface that shares a network with the console. If
+unsure, check whether the console is connected over Wi-Fi or Ethernet in its
+network settings. Do not use 127.0.0.1, a VPN-only address, or the console's own
+address. `hostname -I` and `ip -4 addr` show the machine's addresses. The console must
+be able to reach the computer on TCP 39380. Allow that port through the local
+firewall and do not expose it to the public internet.
 
 
 2. START THE HOST
@@ -68,23 +71,27 @@ the local firewall and do not expose it to the public internet.
    Direct mode and leave it focused. Do not resume a previously failed native
    session.
 
-2. From the project folder, run the command for your connection:
+2. From the project folder, start the host:
 
-     ./start.sh 192.168.68.130    # Ethernet
-     ./start.sh 192.168.68.133    # Wi-Fi
+     ./start.sh
+
+   If it lists more than one LAN address, choose the one on the Switch 2's
+   network. To skip the prompt, pass the address shown by ./start.sh --list:
+
+     ./start.sh 192.0.2.10
 
    The host prints something like:
 
-     Graphics listener ready on 192.168.68.130:39380.
+     Graphics listener ready on 192.0.2.10:39380.
      In fresh SmileBASIC Direct mode, enter:
        LOAD "TXT:NS2"
        RUN
        REMOVE NSR,&H60000000,&H3FFFFFFF
      Then enter this session command:
-       V=START(39380,192,168,68,130,0,0,0,0)
+       V=START(39380,192,0,2,10,0,0,0,0)
 
-   With Wi-Fi, the matching session command is
-   V=START(39380,192,168,68,133,0,0,0,0). The four trailing values are always
+   Use the V=START line printed by the current run; the address decimals in it
+   are the computer address you chose. The four trailing values are always
    0,0,0,0. The command has no per-run secret, so only run the host on a trusted
    local network. Do not expose TCP 39380 to the internet.
 
@@ -147,8 +154,8 @@ Press Ctrl+C in the host terminal to stop its processes. Restart SmileBASIC4 to
 release retained native allocations before a new session.
 
 If the console never connects:
-  - Check the computer IP used in ./start.sh: 192.168.68.130 for Ethernet or
-    192.168.68.133 for Wi-Fi.
+  - Check the address printed by ./start.sh and confirm it is on the console's
+    network. ./start.sh --list shows every detected Wi-Fi/Ethernet address.
   - Check TCP 39380 and local-network/client isolation.
   - Check that Direct mode is focused and NS2 is saved in slot 0.
   - Verify the exact SmileBASIC and system versions listed above.

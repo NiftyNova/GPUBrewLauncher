@@ -11,7 +11,7 @@ fi
 python3 - "$host" <<'PYIP'
 import ipaddress,sys
 try: ipaddress.IPv4Address(sys.argv[1])
-except ValueError: raise SystemExit('Use the computer LAN IPv4 address, for example 192.168.68.130.')
+except ValueError: raise SystemExit('Use the computer LAN IPv4 address, for example 192.0.2.10.')
 PYIP
 wifi_name="${NS2_WIFI_SSID:-}"
 wifi_password="${NS2_WIFI_PASSWORD:-}"

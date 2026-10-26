@@ -102,18 +102,26 @@ console connects directly to the host; no second device connection is needed.
 Guest-network isolation can prevent this even when Wi-Fi appears connected.
 The internal RPC service listens on loopback and uses a per-session token.
 
+`smilebasic/connection.cjs` enumerates the computer's non-loopback IPv4
+addresses instead of assuming a fixed one. If the computer has both Ethernet and
+Wi-Fi, the host lists them with interface names and asks which one the console
+can reach; `./start.sh --list` prints the same list without starting a session.
+
 The host prints the same `V=START(...)` form for each launch. Its four trailing
 values are always `0,0,0,0`, so only run this fork on a trusted local network.
 
 ## Launch and controls
 
 1. Start a fresh console/SmileBASIC session and open **Direct mode**.
-2. Run from the repository root, using the address of the active interface:
+2. Run from the repository root:
 
    ```sh
-   ./start.sh 192.168.68.130   # Ethernet
-   ./start.sh 192.168.68.133   # Wi-Fi
+   ./start.sh
    ```
+
+   If more than one LAN address is present, choose the one on the console's
+   network. `./start.sh --list` prints the candidates, and
+   `./start.sh <computer-IP>` skips the prompt.
 
 3. The host prints `Graphics listener ready` and the `V=START(...)` command.
    Session files are temporary and are deleted on exit. In Direct mode enter
@@ -207,7 +215,7 @@ delete or move its folder out of `apps/`, then Refresh. Hidden directories are i
 library, launch with an absolute path:
 
 ```sh
-HB_APPS_DIR=/absolute/path/to/my-library ./start.sh 192.168.68.130
+HB_APPS_DIR=/absolute/path/to/my-library ./start.sh
 ```
 
 Return to the menu before rebuilding an app, then refresh and relaunch. The host
@@ -480,7 +488,7 @@ execution.
 
 | Problem | Check |
 | --- | --- |
-| Console never connects | Host IP, TCP 39380, Direct-mode focus, saved NS2 program, supported versions, network isolation |
+| Console never connects | Address printed by `./start.sh` (or `./start.sh --list`), TCP 39380, Direct-mode focus, saved NS2 program, supported versions, network isolation |
 | `V=START` rejected | Check the computer address, TCP port 39380, and the trailing `0,0,0,0` values |
 | `LOAD` fails | Save `bootstrap.bas` as NS2 in slot 0 and preserve its source exactly |
 | App missing | `catalog.rejected`, duplicate IDs, missing assets, validator/Pillow installation |
@@ -511,7 +519,7 @@ smilebasic/            BASIC bootstrap and native host bridge
   pico-keyboard/       Archived legacy Pico automation; not used by this fork
   reference/           Small version-specific SDK verification records
 scripts/               Tool discovery and desktop helper builds
-start.sh               Host entry point
+start.sh               Host entry point; auto-detects the computer's LAN address
 ```
 
 The repository includes application source and generated runtime assets.

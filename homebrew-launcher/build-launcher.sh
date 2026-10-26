@@ -11,6 +11,6 @@ done
 "$NODE" apps/hello-world/build.cjs
 if [[ ${1:-} == --check ]]; then
  bash scripts/build-checks.sh
- "$NODE" --test homebrew-launcher/*.test.cjs sdk/tests/*.test.cjs
+ "$NODE" --test homebrew-launcher/*.test.cjs smilebasic/*.test.cjs sdk/tests/*.test.cjs
  "$NODE" homebrew-launcher/launcher-desktop-check.cjs
 fi

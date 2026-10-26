@@ -6,8 +6,8 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const children=new Set();
 let stopping,sessionDirectory,keepSession;
-function start(script,args=[],readyText){
- const child=spawn(process.execPath,[script,...args],{cwd:root,stdio:['ignore','pipe','inherit']});
+function start(script,args=[],readyText,options={}){
+ const child=spawn(process.execPath,[script,...args],{cwd:root,stdio:[options.stdin||'ignore','pipe','inherit']});
  child.script=script;children.add(child);let output='',readyResolve,readyReject;
  const ready=new Promise((resolve,reject)=>{readyResolve=resolve;readyReject=reject;});
  // Some stages only need completion; keep unused readiness rejections handled.
@@ -46,7 +46,7 @@ async function main(){
  sessionDirectory=await fs.mkdtemp(path.join(keepSession?path.join(root,'runs'):os.tmpdir(),keepSession?'launcher-':'gpubrewlauncher-'));
  process.env.HB_SESSION_DIR=sessionDirectory;
  if(keepSession)console.log('Keeping this session in: '+sessionDirectory);
- const host=start('smilebasic/host.cjs',process.argv.slice(2),'Qualified native session ready for graphics inspection.');
+ const host=start('smilebasic/host.cjs',process.argv.slice(2),'Qualified native session ready for graphics inspection.',{stdin:'inherit'});
  const directory=sessionDirectory;
  try{
   await host.ready;

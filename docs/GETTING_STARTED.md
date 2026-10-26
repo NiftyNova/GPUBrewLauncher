@@ -42,20 +42,25 @@ which you can check with `node scripts/doctor.cjs --build`. Desktop GPU testing
 also needs a C compiler, `libvulkan-dev` and a Vulkan driver. The release runs on
 the console GPU, so a gaming GPU in the computer is not required.
 
-Find the computer's LAN IPv4 address in its network settings, or run:
+The host detects the computer's LAN IPv4 address automatically. To list the
+candidates without starting a session:
 
 ```sh
-hostname -I
+./start.sh --list
 ```
 
-This fork's reference setup uses:
+If the computer has more than one (for example Wi-Fi and Ethernet), `./start.sh`
+shows each address with its interface name and asks which one shares the
+console's network. You can pass that address directly to skip the prompt:
 
-- **Ethernet:** `192.168.68.130`
-- **Wi-Fi:** `192.168.68.133`
+```sh
+./start.sh 192.0.2.10
+```
 
-Use the address of the interface shared with the console. Do not use
-`127.0.0.1`, a VPN-only address, or the console's own address. If `hostname -I`
-shows a different address for that interface, use that instead.
+Use the address of the interface shared with the console. If unsure, check
+whether the console is connected over Wi-Fi or Ethernet in its network settings.
+Do not use `127.0.0.1`, a VPN-only address, or the console's own address.
+`hostname -I` and `ip -4 addr` show the machine's addresses.
 
 ## 3. Confirm the saved bootstrap
 
@@ -73,18 +78,25 @@ the command has no per-launch secret.
 
 1. Close and reopen SmileBASIC so it is a fresh application process, then open
    **Direct mode**. Do not resume a previously failed native session.
-2. On the computer, run the command for your connection:
+2. On the computer, start the host:
 
    ```sh
-   ./start.sh 192.168.68.130   # Ethernet
-   ./start.sh 192.168.68.133   # Wi-Fi
+   ./start.sh
+   ```
+
+   If it lists more than one LAN address, choose the one on the console's
+   network. To skip the prompt, pass the address shown by `./start.sh --list`:
+
+   ```sh
+   ./start.sh 192.0.2.10
    ```
 
    The preflight checker validates dependencies. The host then prints
    `Graphics listener ready` and the `V=START(...)` command. Session files are
    temporary and are deleted when the program exits. To keep a session for
-   debugging, run `HB_KEEP_SESSION=1 ./start.sh <address>` with the same address;
-   the retained debug session is created under `runs/` and its path is printed.
+   debugging, run `HB_KEEP_SESSION=1 ./start.sh` and make the same address
+   choice; the retained debug session is created under `runs/` and its path is
+   printed.
 3. Leave Direct mode focused. Enter these lines separately:
 
    ```basic
@@ -96,11 +108,9 @@ the command has no per-launch secret.
 
    Confirm the load when prompted. `RUN` prepares the bootstrap. The expected
    `Out of memory` response to `REMOVE` is part of the sequence. Enter the
-   `V=START(...)` line printed by the current host run; its trailing values are
-   always `0,0,0,0`. For this fork's reference setup:
-
-   - Ethernet: `V=START(39380,192,168,68,130,0,0,0,0)`
-   - Wi-Fi: `V=START(39380,192,168,68,133,0,0,0,0)`
+   `V=START(...)` line printed by the current host run; its address decimals
+   are the computer address you chose, and its trailing values are always
+   `0,0,0,0`.
 4. Wait for the host to finish checks, upload graphics/audio and show
    GPUBrewLauncher. A successful startup reports a continuous native frame loop.
    The display stays black during graphics preparation, then GPUBrewLauncher
@@ -156,7 +166,7 @@ versions matched.
 
 | Symptom | Check |
 | --- | --- |
-| Console never connects | Host IP (`192.168.68.130` Ethernet, `192.168.68.133` Wi-Fi), TCP 39380, Direct-mode focus, saved NS2 program, supported versions, network isolation |
+| Console never connects | Address printed by `./start.sh` (or `./start.sh --list`), TCP 39380, Direct-mode focus, saved NS2 program, supported versions, network isolation |
 | `V=START` rejected | Check the computer address, TCP port 39380, and the trailing `0,0,0,0` values |
 | `LOAD` fails | Save `bootstrap.bas` as NS2 in slot 0; preserve the source exactly |
 | Missing module/font/tool message | Run `node scripts/doctor.cjs` and fix each `NEED` line |

@@ -54,7 +54,7 @@ request services, add:
 "sdk": {
   "version": 1,
   "capabilities": ["vibration", "nfc", "udp"],
-  "endpoints": [{"address": "192.168.68.130", "port": 9000}]
+  "endpoints": [{"address": "192.0.2.10", "port": 9000}]
 }
 ```
 
@@ -188,7 +188,7 @@ Direct Node API:
 ```js
 const network = await require('./sdk/host/network.cjs').create(rpc, directory);
 const response = await network.exchange(
-  {address: '192.168.68.130', port: 9000},
+  {address: '192.0.2.10', port: 9000},
   Buffer.from('ping'),
   {timeout: 1000}
 );

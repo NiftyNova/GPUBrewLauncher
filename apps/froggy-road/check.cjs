@@ -19,8 +19,7 @@ const A = 1;
 function findLauncher() {
   if (process.env.HB_LAUNCHER) return path.resolve(process.env.HB_LAUNCHER);
   const candidates = [
-    path.resolve(__dirname, '../..'), // copied into HBLauncher/apps/froggy-road
-    path.resolve(__dirname, '../../HBLauncher-main-Edit2/HBLauncher-main'),
+    path.resolve(__dirname, '../..'), // inside the launcher's apps/ folder
   ];
   for (const candidate of candidates) {
     if (fsSync.existsSync(path.join(candidate, 'homebrew-launcher/game-compute-check.c'))) return candidate;

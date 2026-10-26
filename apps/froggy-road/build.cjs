@@ -6,8 +6,7 @@ const path = require('node:path');
 function findSdk() {
   if (process.env.HB_SDK) return path.resolve(process.env.HB_SDK);
   const candidates = [
-    path.resolve(__dirname, '../../sdk'), // copied into HBLauncher/apps/froggy-road
-    path.resolve(__dirname, '../../HBLauncher-main-Edit2/HBLauncher-main/sdk'),
+    path.resolve(__dirname, '../../sdk'), // inside the launcher's apps/ folder
   ];
   for (const candidate of candidates) {
     if (fs.existsSync(path.join(candidate, 'build.cjs'))) return candidate;
