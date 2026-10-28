@@ -1,11 +1,8 @@
 // Read-only capture of the display imports used by the running application.
-// Import slots are discovered from the application's own MOD0/dynamic tables,
-// so demo and retail SmileBASIC builds with different text layouts both work.
 // In particular, do not invoke SDK GetService: it has a hidden x8 return ABI.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const imports = require('./display-imports.json');
-const {resolveSlots, executableRanges, inRanges} = require('./imports.cjs');
 
 async function main(directory) {
   directory = path.resolve(directory);
@@ -14,22 +11,15 @@ async function main(directory) {
   const save = () => fs.writeFile(path.join(directory, 'display-inspection.json'),
     JSON.stringify(report, null, 2), {mode: 0o600});
   try {
-    const names = Object.keys(imports);
-    const {slots, module} = await resolveSlots(rpc, rpc.a.main, names, imports);
-    const end = module?.textEnd > 0 ? rpc.a.main + module.textEnd :
-      (rpc.a.sdk > rpc.a.main ? rpc.a.sdk : rpc.a.main + 0x10000000);
-    const codeRanges = await executableRanges(rpc, rpc.a.main, end);
-    for (const name of names) {
-      const slot = slots[name];
-      const target = Number((await rpc.read(rpc.a.main + slot, 8)).readBigUInt64LE());
+    for (const [name, entry] of Object.entries(imports)) {
+      const thunk = await rpc.read(rpc.a.main + entry.plt, 16);
+      if (thunk.toString('hex') !== entry.bytes) throw Error('Application import changed: ' + name);
+      const target = Number((await rpc.read(rpc.a.main + entry.slot, 8)).readBigUInt64LE());
       if (!Number.isSafeInteger(target) || !target) throw Error('Invalid import address: ' + name);
       const region = await rpc.query(target);
       if ((region.permissions & 5) !== 5) throw Error('Import is not executable: ' + name);
-      // An unresolved import still points at the application's binder stub.
-      const unresolved = inRanges(codeRanges, target);
-      if (unresolved && name === 'nvnBootstrapLoader')
-        throw Error('nvnBootstrapLoader is unresolved');
-      report.imports[name] = {slot, target, unresolved, region};
+      const unresolved = target === rpc.a.main + 0x29b850;
+      report.imports[name] = {target, unresolved, region};
       if (!unresolved) {
         const size = Math.min(0x1000, region.address + region.size - target);
         await fs.writeFile(path.join(directory, name + '.bin'), await rpc.read(target, size), {mode: 0o600});

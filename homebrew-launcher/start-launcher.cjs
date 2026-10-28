@@ -40,8 +40,6 @@ function stop(){
 process.on('SIGINT',stop);process.on('SIGTERM',stop);
 async function main(){
  keepSession=process.env.HB_KEEP_SESSION==='1';
- if(process.env.HB_SM4_DEMO==='1')
-  console.log('SmileBASIC 4 demo mode: application imports are discovered from the running module.');
  // Session files are scratch data. Keep them out of the project unless the
  // operator explicitly asks to retain them for debugging.
  if(keepSession)await fs.mkdir(path.join(root,'runs'),{recursive:true,mode:0o700});
