@@ -1,0 +1,75 @@
+#version 450
+#extension GL_GOOGLE_include_directive : require
+layout(local_size_x=1) in;
+#include "abi.glsl"
+#include "hb.glsl"
+
+layout(set=0, binding=1, std430) buffer PrivateMemory { uint words[]; } memory;
+#define mem memory.words
+
+#include "c64-core.glsl"
+
+// The C64 PAL clock is 985,248 Hz. The launcher advances one 60 Hz frame per
+// dispatch, so each dispatch gets 16420.8 cycles on average. Accumulating the
+// 48-cycle remainder keeps long sessions from drifting.
+const uint CYCLES_PER_FRAME = 16420u;
+const uint FRAME_REMAINDER  = 48u;
+
+void main() {
+    c.motion.x += 1.0 / 60.0;
+    c.state.z++;
+    c.transition.x = max(0.0, c.transition.x - 1.0 / 15.0);
+
+    uint buttons = hbButtons();
+
+    mapController();
+
+    // Restore the checkpoint, then start the machine on the first dispatch.
+    // resetMachine() must come after loadCpu(), otherwise the zeroed CPU
+    // checkpoint would overwrite the reset vector and registers.
+    loadCpu();
+    if (mget(META_BASE + META_INIT) == 0u) resetMachine();
+
+    // A PRG is injected once BASIC has printed its READY prompt. Waiting a
+    // few frames lets KERNAL finish its keyboard initialisation first.
+    if (mget(META_BASE + META_STAGE) == 1u &&
+        mget(META_BASE + META_TYPE) == 1u) {
+        if (screenHasReady()) {
+            uint idle = mget(META_BASE + META_IDLE) + 1u;
+            mset(META_BASE + META_IDLE, idle);
+            if (idle >= 8u) loadPrg();
+        } else {
+            mset(META_BASE + META_IDLE, 0u);
+        }
+    }
+
+    uint frames = mget(CPU_BASE + CPU_FRAMES);
+    uint remainder = mget(CPU_BASE + CPU_REMAINDER) + FRAME_REMAINDER;
+    uint budget = CYCLES_PER_FRAME;
+    if (remainder >= 60u) { remainder -= 60u; budget++; }
+    uint limit = c64Total + budget;
+
+    // Bounded loop: every 6502 instruction consumes at least two cycles, so
+    // the guard can only trigger if the core is stuck in a zero-cycle state.
+    uint guard = 0u;
+    while (c64Total < limit && !cpuHalted && guard < 20000u) {
+        if (irqLine && (P & P_I) == 0u) {
+            uint n = serviceIrq();
+            c64Total += n;
+            c64Spent += n;
+            tick(n);
+        } else {
+            executeInstruction();
+            tick(baseCycles);
+        }
+        guard++;
+    }
+
+    saveCpu();
+    saveFrameCounters(frames + 1u, remainder);
+
+    // Keep the request asserted until the host processes it at a cycle
+    // boundary; a short tap could otherwise be missed.
+    if ((buttons & HB_MINUS) != 0u) hbExit();
+    hbEndFrame();
+}

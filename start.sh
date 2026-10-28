@@ -23,4 +23,9 @@ TXT
 esac
 
 "$NODE" scripts/doctor.cjs
+if [ -f apps/c64-emulator/prepare.cjs ]; then
+  if ! "$NODE" apps/c64-emulator/prepare.cjs; then
+    echo "C64 GPU: auto-pack failed; starting with the previous package. Fix ROM/ and restart." >&2
+  fi
+fi
 exec "$NODE" homebrew-launcher/start-launcher.cjs "$@"
